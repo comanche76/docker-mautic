@@ -1,4 +1,4 @@
-FROM debian:bullseye AS base
+FROM debian:bookworm AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PHP_CONF_DATE_TIMEZONE=UTC \
@@ -14,7 +14,6 @@ RUN echo 'APT::Install-Recommends "0"; APT::Install-Suggests "0";' > /etc/apt/ap
     echo 'path-exclude=/usr/share/man/*' > /etc/dpkg/dpkg.cfg.d/path_exclusions && \
     echo 'path-exclude=/usr/share/doc/*' >> /etc/dpkg/dpkg.cfg.d/path_exclusions && \
     apt-get update && apt-get install -y \
-        apt-transport-https \
         ca-certificates \
         curl \
         wget \
@@ -25,9 +24,9 @@ RUN echo 'APT::Install-Recommends "0"; APT::Install-Suggests "0";' > /etc/apt/ap
         openssh-client \
         aspell \
         aspell-en aspell-es aspell-de aspell-fr \
-        gnupg && \
+        gnupg2 && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
-    echo "deb https://packages.sury.org/php/ bullseye main" > /etc/apt/sources.list.d/php.list && \
+    echo "deb https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php.list && \
     apt-get update && apt-get install -y \
         php8.3-fpm \
         php8.3-cli \
@@ -43,6 +42,7 @@ RUN echo 'APT::Install-Recommends "0"; APT::Install-Suggests "0";' > /etc/apt/ap
         php8.3-bcmath \
         php8.3-apcu \
         php8.3-exif \
+        php8.3-imap \
         php8.3-memcached && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     ln -s /usr/sbin/php-fpm8.3 /usr/local/sbin/php-fpm && \
@@ -50,11 +50,21 @@ RUN echo 'APT::Install-Recommends "0"; APT::Install-Suggests "0";' > /etc/apt/ap
     mkdir -p /srv/mautic /run/php && \
     sed -i "s#listen = /run/php/php8.3-fpm.sock#listen = 9000#g" /etc/php/8.3/fpm/pool.d/www.conf
 
+# Install Node.JS (LTS)
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g npm@latest
+
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 RUN chmod +x /usr/local/bin/composer && \
     mkdir -p /var/www/.composer /var/www/.cache && \
     chown www-data:www-data /var/www/.composer /var/www/.cache
+
+# Set www-data permission to log file
+RUN mkdir -p /var/log && \
+    touch /var/log/php8.3-fpm.log && \
+    chown -R www-data:www-data /var/log/php8.3-fpm.log
 
 VOLUME /srv/mautic
 
