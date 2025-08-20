@@ -31,9 +31,8 @@ services:
     environment:
       APP_ENV: '${APP_ENV:-prod}'
       COMPOSER_HOME: '/var/www/.composer'
-      PHP_IDE_CONFIG: 'serverName=mautic-docker-web-2'
+      PHP_IDE_CONFIG: 'serverName=mautic-docker-web'
       XDEBUG_MODE: '${XDEBUG_MODE:-off}'
-#      XDEBUG_CONFIG: 'client_host=172.17.0.1'
       NPM_CONFIG_CACHE: /var/www/.npm
     volumes:
       - '.:/srv/mautic'
@@ -65,17 +64,33 @@ services:
     networks:
       - 'app-network'
 
-  nginx:
-    image: nginx
+#  nginx:
+#    image: nginx
+#    ports:
+#      - '81:80'
+#    volumes:
+#      - '.:/srv/mautic'
+#      - './docker/conf/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro'
+#    networks:
+#      - 'app-network'
+#    depends_on:
+#      - php
+
+  httpd:
+    image: 'httpd:2.4'
+    environment:
+      APP_ENV: '${APP_ENV:-prod}'
+    depends_on:
+      - 'fpm'
     ports:
-      - '81:80'
+      - '8081:80'
     volumes:
-      - '.:/srv/mautic'
-      - './docker/conf/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro'
+      - '.:/srv/mautic:ro'
+      - './docker/conf/httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro'
+      - './docker/conf/httpd/vhost.conf:/usr/local/apache2/conf/vhost.conf:ro'
+#      - './volumes/apache/log/:/var/log'
     networks:
       - 'app-network'
-    depends_on:
-      - php
 
 networks:
   app-network:
