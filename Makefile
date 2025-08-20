@@ -44,7 +44,7 @@ cache:
 
 .PHONY: bash
 bash:
-	$(DOCKER_COMPOSE) exec php bash
+	$(DOCKER_COMPOSE) exec fpm bash
 
 ## TODO
 # Rebuild web assets

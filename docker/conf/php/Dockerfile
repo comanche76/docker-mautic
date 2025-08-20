@@ -1,4 +1,4 @@
-FROM debian:bookworm AS base
+FROM debian:bookworm-slim AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PHP_CONF_DATE_TIMEZONE=UTC \
@@ -43,6 +43,7 @@ RUN echo 'APT::Install-Recommends "0"; APT::Install-Suggests "0";' > /etc/apt/ap
         php8.3-apcu \
         php8.3-exif \
         php8.3-imap \
+        php8.3-xdebug \
         php8.3-memcached && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     ln -s /usr/sbin/php-fpm8.3 /usr/local/sbin/php-fpm && \
@@ -66,7 +67,7 @@ RUN mkdir -p /var/log && \
     touch /var/log/php8.3-fpm.log && \
     chown -R www-data:www-data /var/log/php8.3-fpm.log
 
-VOLUME /srv/mautic
+COPY xdebug.ini /etc/php/8.3/cli/conf.d/99-akeneo-xdebug.ini
+COPY xdebug.ini /etc/php/8.3/fpm/conf.d/99-akeneo-xdebug.ini
 
-# php-fpm in foreground
-CMD ["php-fpm", "-F"]
+VOLUME /srv/mautic

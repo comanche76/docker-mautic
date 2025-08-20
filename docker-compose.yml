@@ -9,20 +9,43 @@ services:
     environment:
       APP_ENV: '${APP_ENV:-prod}'
       COMPOSER_HOME: '/var/www/.composer'
-      PHP_IDE_CONFIG: 'serverName=pim-docker-cli'
+      PHP_IDE_CONFIG: 'serverName=mautic-docker-cli'
       XDEBUG_MODE: '${XDEBUG_MODE:-off}'
       XDEBUG_CONFIG: 'client_host=172.17.0.1'
+    volumes:
+      - '.:/srv/mautic'
+      - '${HOST_COMPOSER_HOME:-~/.composer}:/var/www/.composer'
+    working_dir: '/srv/mautic'
+    command: 'php'
+    user: 'www-data'
+    init: true
+    networks:
+      - 'app-network'
+    depends_on:
+      - 'mysql'
+  fpm:
+    image: 'mautic-php-6.0.x'
+    build:
+      context: docker/conf/php
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: '${APP_ENV:-prod}'
+      COMPOSER_HOME: '/var/www/.composer'
+      PHP_IDE_CONFIG: 'serverName=mautic-docker-web-2'
+      XDEBUG_MODE: '${XDEBUG_MODE:-off}'
+#      XDEBUG_CONFIG: 'client_host=172.17.0.1'
       NPM_CONFIG_CACHE: /var/www/.npm
     volumes:
       - '.:/srv/mautic'
       - '${HOST_COMPOSER_HOME:-~/.composer}:/var/www/.composer'
     working_dir: '/srv/mautic'
-#    command: 'php-fpm'
-#    user: 'www-data'
+    command: 'php-fpm -F'
     networks:
       - 'app-network'
     depends_on:
       - 'mysql'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   mysql:
     build:
@@ -45,7 +68,7 @@ services:
   nginx:
     image: nginx
     ports:
-      - '8081:80'
+      - '81:80'
     volumes:
       - '.:/srv/mautic'
       - './docker/conf/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro'
