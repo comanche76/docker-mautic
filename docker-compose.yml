@@ -11,7 +11,7 @@ services:
       COMPOSER_HOME: '/var/www/.composer'
       PHP_IDE_CONFIG: 'serverName=mautic-docker-cli'
       XDEBUG_MODE: '${XDEBUG_MODE:-off}'
-      XDEBUG_CONFIG: 'client_host=172.17.0.1'
+      XDEBUG_CONFIG: 'client_host=host.docker.internal'
     volumes:
       - '.:/srv/mautic'
       - '${HOST_COMPOSER_HOME:-~/.composer}:/var/www/.composer'
@@ -33,12 +33,12 @@ services:
       COMPOSER_HOME: '/var/www/.composer'
       PHP_IDE_CONFIG: 'serverName=mautic-docker-web'
       XDEBUG_MODE: '${XDEBUG_MODE:-off}'
+      XDEBUG_CONFIG: 'client_host=host.docker.internal'
       NPM_CONFIG_CACHE: /var/www/.npm
     volumes:
       - '.:/srv/mautic'
       - '${HOST_COMPOSER_HOME:-~/.composer}:/var/www/.composer'
     working_dir: '/srv/mautic'
-    command: 'php-fpm -F'
     networks:
       - 'app-network'
     depends_on:
